@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Art Teaching Materials Database</title>
+    <title>Complete Art Room Database</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@
             background-color: #f5f5f5;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             padding: 20px;
@@ -60,6 +60,26 @@
         .filter-btn.active {
             background: #e74c3c;
         }
+        .type-toggle {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .toggle-btn {
+            padding: 10px 20px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+        .toggle-btn:hover {
+            background: #219a52;
+        }
+        .toggle-btn.active {
+            background: #2c3e50;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -79,7 +99,7 @@
         tr:hover {
             background-color: #f8f9fa;
         }
-        .binder-name {
+        .location {
             font-weight: bold;
             color: #2c3e50;
         }
@@ -89,6 +109,22 @@
             border-radius: 12px;
             font-size: 11px;
             color: #2c3e50;
+        }
+        .binder-name {
+            font-weight: bold;
+            color: #8e44ad;
+        }
+        .results-count {
+            margin: 10px 0;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        .instructions {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
         }
         .export-container {
             margin-top: 20px;
@@ -106,32 +142,26 @@
         .export-btn:hover {
             background: #219a52;
         }
-        .results-count {
-            margin: 10px 0;
-            font-weight: bold;
-            color: #7f8c8d;
-        }
-        .instructions {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            border-left: 4px solid #3498db;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎨 Art Teaching Materials Database</h1>
+        <h1>🎨 Complete Art Room Database</h1>
         
         <div class="instructions">
-            <strong>How to use:</strong> Search by material name, binder, or category. Use the filter buttons for quick category searches. Click "Export to CSV" to download for Excel/Google Sheets.
+            <strong>Database includes:</strong> Teaching materials in binders AND physical supplies in storage locations. Toggle between views, search everything, and export data as needed.
+        </div>
+
+        <div class="type-toggle">
+            <button class="toggle-btn active" id="showAll">Show All</button>
+            <button class="toggle-btn" id="showBinders">Binders Only</button>
+            <button class="toggle-btn" id="showSupplies">Supplies Only</button>
         </div>
 
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search materials, binders, or categories..." />
-            <select id="binderFilter">
-                <option value="">All Binders</option>
+            <input type="text" id="searchInput" placeholder="Search materials, locations, binders, or categories..." />
+            <select id="locationFilter">
+                <option value="">All Locations</option>
             </select>
             <select id="categoryFilter">
                 <option value="">All Categories</option>
@@ -139,26 +169,25 @@
         </div>
 
         <div class="filter-buttons">
+            <button class="filter-btn" data-category="Paint">Paint</button>
+            <button class="filter-btn" data-category="Drawing Tools">Drawing</button>
+            <button class="filter-btn" data-category="Markers">Markers</button>
+            <button class="filter-btn" data-category="Paper">Paper</button>
             <button class="filter-btn" data-category="Assessment Materials">Assessment</button>
-            <button class="filter-btn" data-category="Drawing & Sketching">Drawing</button>
-            <button class="filter-btn" data-category="Color Theory">Color</button>
             <button class="filter-btn" data-category="Digital Art & New Media">Digital</button>
-            <button class="filter-btn" data-category="Mixed Media & 3D">3D/Mixed</button>
-            <button class="filter-btn" data-category="Photography">Photo</button>
-            <button class="filter-btn" data-category="Printmaking">Print</button>
-            <button class="filter-btn" data-category="Engagement & Games">Games</button>
             <button class="filter-btn" data-category="">Clear Filters</button>
         </div>
 
         <div class="results-count" id="resultsCount"></div>
 
-        <table id="materialsTable">
+        <table id="itemsTable">
             <thead>
                 <tr>
-                    <th>Material/Resource</th>
-                    <th>Binder Location</th>
+                    <th>Item/Resource</th>
+                    <th>Location/Binder</th>
                     <th>Category</th>
-                    <th>Skills/Techniques</th>
+                    <th>Description/Skills</th>
+                    <th>Type</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
@@ -172,147 +201,261 @@
     </div>
 
     <script>
-        const materialsData = [
-            // Unused Units
-            {material: "Complimentary color scheme mixing paperwork", binder: "Unused Units", category: "Color Theory", skills: "Color mixing, complementary colors"},
-            {material: "Printmaking design map", binder: "Unused Units", category: "Printmaking", skills: "Printmaking planning, design process"},
-            {material: "Puppet checklist", binder: "Unused Units", category: "Mixed Media & 3D", skills: "3D construction, puppet making"},
-            {material: "iOS sketchbook brainstorming", binder: "Unused Units", category: "Drawing & Sketching", skills: "Digital sketching, brainstorming"},
-            {material: "Material exploration sheets", binder: "Unused Units", category: "General Planning & Exploration", skills: "Material testing, exploration"},
-            {material: "Check-ins from previous units on drawing", binder: "Unused Units", category: "Assessment Materials", skills: "Progress monitoring, drawing assessment"},
-            {material: "In progress peer review worksheets", binder: "Unused Units", category: "Assessment Materials", skills: "Peer assessment, critique"},
-            {material: "Worksheets about symbolism", binder: "Unused Units", category: "Reflection & Critical Thinking", skills: "Symbolism, visual analysis"},
-            {material: "Sketchbook assessment rubrics", binder: "Unused Units", category: "Assessment Materials", skills: "Rubric assessment, sketchbook evaluation"},
-            {material: "Activism worksheets", binder: "Unused Units", category: "Reflection & Critical Thinking", skills: "Social art, activism through art"},
-            {material: "Graffiti reflections", binder: "Unused Units", category: "Reflection & Critical Thinking", skills: "Street art analysis, reflection"},
-            {material: "Mask design checklists", binder: "Unused Units", category: "Mixed Media & 3D", skills: "3D design, mask construction"},
-            {material: "Line reflection sheet", binder: "Unused Units", category: "Design Elements & Principles", skills: "Line quality, reflection"},
-            {material: "Examples of isometric houses", binder: "Unused Units", category: "Drawing & Sketching", skills: "Isometric drawing, perspective"},
-            {material: "Community mind map sheet", binder: "Unused Units", category: "Reflection & Critical Thinking", skills: "Community mapping, social connections"},
-            {material: "I am poem page", binder: "Unused Units", category: "Reflection & Critical Thinking", skills: "Self-expression, poetry integration"},
-            {material: "Classroom manifesto planning worksheet", binder: "Unused Units", category: "Reflection & Critical Thinking", skills: "Classroom culture, manifesto writing"},
-            {material: "Assemblage paperwork", binder: "Unused Units", category: "Mixed Media & 3D", skills: "Assemblage, mixed media"},
-            {material: "Identifying design principles worksheets", binder: "Unused Units", category: "Design Elements & Principles", skills: "Design principles identification"},
-            {material: "Personality quiz (for assigning students their independent study)", binder: "Unused Units", category: "Assessment Materials", skills: "Student assessment, learning styles"},
+        const allData = [
+            // TEACHING MATERIALS (BINDERS)
+            // Unused Units Binder
+            {item: "Complimentary color scheme mixing paperwork", location: "Unused Units", category: "Color Theory", description: "Color mixing, complementary colors", type: "Binder"},
+            {item: "Printmaking design map", location: "Unused Units", category: "Printmaking", description: "Printmaking planning, design process", type: "Binder"},
+            {item: "Puppet checklist", location: "Unused Units", category: "Mixed Media & 3D", description: "3D construction, puppet making", type: "Binder"},
+            {item: "iOS sketchbook brainstorming", location: "Unused Units", category: "Drawing & Sketching", description: "Digital sketching, brainstorming", type: "Binder"},
+            {item: "Material exploration sheets", location: "Unused Units", category: "General Planning & Exploration", description: "Material testing, exploration", type: "Binder"},
+            {item: "Check-ins from previous units on drawing", location: "Unused Units", category: "Assessment Materials", description: "Progress monitoring, drawing assessment", type: "Binder"},
+            {item: "In progress peer review worksheets", location: "Unused Units", category: "Assessment Materials", description: "Peer assessment, critique", type: "Binder"},
+            {item: "Worksheets about symbolism", location: "Unused Units", category: "Reflection & Critical Thinking", description: "Symbolism, visual analysis", type: "Binder"},
+            {item: "Sketchbook assessment rubrics", location: "Unused Units", category: "Assessment Materials", description: "Rubric assessment, sketchbook evaluation", type: "Binder"},
+            {item: "Activism worksheets", location: "Unused Units", category: "Reflection & Critical Thinking", description: "Social art, activism through art", type: "Binder"},
+            {item: "Graffiti reflections", location: "Unused Units", category: "Reflection & Critical Thinking", description: "Street art analysis, reflection", type: "Binder"},
+            {item: "Mask design checklists", location: "Unused Units", category: "Mixed Media & 3D", description: "3D design, mask construction", type: "Binder"},
+            {item: "Line reflection sheet", location: "Unused Units", category: "Design Elements & Principles", description: "Line quality, reflection", type: "Binder"},
+            {item: "Examples of isometric houses", location: "Unused Units", category: "Drawing & Sketching", description: "Isometric drawing, perspective", type: "Binder"},
+            {item: "Community mind map sheet", location: "Unused Units", category: "Reflection & Critical Thinking", description: "Community mapping, social connections", type: "Binder"},
+            {item: "I am poem page", location: "Unused Units", category: "Reflection & Critical Thinking", description: "Self-expression, poetry integration", type: "Binder"},
+            {item: "Classroom manifesto planning worksheet", location: "Unused Units", category: "Reflection & Critical Thinking", description: "Classroom culture, manifesto writing", type: "Binder"},
+            {item: "Assemblage paperwork", location: "Unused Units", category: "Mixed Media & 3D", description: "Assemblage, mixed media", type: "Binder"},
+            {item: "Identifying design principles worksheets", location: "Unused Units", category: "Design Elements & Principles", description: "Design principles identification", type: "Binder"},
+            {item: "Personality quiz (for assigning students their independent study)", location: "Unused Units", category: "Assessment Materials", description: "Student assessment, learning styles", type: "Binder"},
 
-            // Thematic Laminated Resources
-            {material: "Examples of symbolism and art", binder: "Thematic Laminated Resources", category: "Reflection & Critical Thinking", skills: "Symbolism analysis, art interpretation"},
-            {material: "Art manifesto", binder: "Thematic Laminated Resources", category: "Reflection & Critical Thinking", skills: "Art philosophy, manifesto writing"},
-            {material: "Design movements", binder: "Thematic Laminated Resources", category: "Design Elements & Principles", skills: "Art history, design movements"},
-            {material: "Art is about examples", binder: "Thematic Laminated Resources", category: "Reflection & Critical Thinking", skills: "Art interpretation, conceptual thinking"},
-            {material: "Accessibility note cards", binder: "Thematic Laminated Resources", category: "Special Needs & Accessibility", skills: "Accessibility awareness, inclusive art education"},
-            {material: "Assemblage", binder: "Thematic Laminated Resources", category: "Mixed Media & 3D", skills: "Assemblage techniques, mixed media"},
-            {material: "Bad designs", binder: "Thematic Laminated Resources", category: "Design Elements & Principles", skills: "Design critique, visual analysis"},
-            {material: "Photos can be about... examples", binder: "Thematic Laminated Resources", category: "Photography", skills: "Photography concepts, visual storytelling"},
-            {material: "Movement in art", binder: "Thematic Laminated Resources", category: "Design Elements & Principles", skills: "Movement principles, visual dynamics"},
+            // Thematic Laminated Resources Binder
+            {item: "Examples of symbolism and art", location: "Thematic Laminated Resources", category: "Reflection & Critical Thinking", description: "Symbolism analysis, art interpretation", type: "Binder"},
+            {item: "Art manifesto", location: "Thematic Laminated Resources", category: "Reflection & Critical Thinking", description: "Art philosophy, manifesto writing", type: "Binder"},
+            {item: "Design movements", location: "Thematic Laminated Resources", category: "Design Elements & Principles", description: "Art history, design movements", type: "Binder"},
+            {item: "Art is about examples", location: "Thematic Laminated Resources", category: "Reflection & Critical Thinking", description: "Art interpretation, conceptual thinking", type: "Binder"},
+            {item: "Accessibility note cards", location: "Thematic Laminated Resources", category: "Special Needs & Accessibility", description: "Accessibility awareness, inclusive art education", type: "Binder"},
+            {item: "Assemblage", location: "Thematic Laminated Resources", category: "Mixed Media & 3D", description: "Assemblage techniques, mixed media", type: "Binder"},
+            {item: "Bad designs", location: "Thematic Laminated Resources", category: "Design Elements & Principles", description: "Design critique, visual analysis", type: "Binder"},
+            {item: "Photos can be about... examples", location: "Thematic Laminated Resources", category: "Photography", description: "Photography concepts, visual storytelling", type: "Binder"},
+            {item: "Movement in art", location: "Thematic Laminated Resources", category: "Design Elements & Principles", description: "Movement principles, visual dynamics", type: "Binder"},
 
-            // More Drawing Lesson Plan Resources
-            {material: "Value practice sheets (shading to turn 2D into 3D forms)", binder: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", skills: "Value, 3D form, shading"},
-            {material: "Examples of value scales using lines", binder: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", skills: "Value scales, line techniques"},
-            {material: "Drawing exercises (straight lines, curved lines, etc.)", binder: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", skills: "Line control, basic drawing"},
-            {material: "Exercise worksheets on drawing 3-dimensional forms from 2D objects", binder: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", skills: "3D visualization, form drawing"},
-            {material: "Mark making worksheets", binder: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", skills: "Mark making, texture techniques"},
-            {material: "Texture drawing worksheets", binder: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", skills: "Texture rendering, surface techniques"},
-            {material: "Oil pastels exemplar", binder: "More Drawing Lesson Plan Resources", category: "Mixed Media & 3D", skills: "Oil pastels, color blending"},
-            {material: "Value scale worksheets (English and Spanish)", binder: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", skills: "Value scales, bilingual instruction"},
-            {material: "Art critique worksheet for value scale projects", binder: "More Drawing Lesson Plan Resources", category: "Assessment Materials", skills: "Art critique, value assessment"},
-            {material: "Examples of utilizing different lines to make 2D images look 3-dimensional", binder: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", skills: "Line techniques, 3D illusion"},
+            // More Drawing Lesson Plan Resources Binder
+            {item: "Value practice sheets (shading to turn 2D into 3D forms)", location: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", description: "Value, 3D form, shading", type: "Binder"},
+            {item: "Examples of value scales using lines", location: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", description: "Value scales, line techniques", type: "Binder"},
+            {item: "Drawing exercises (straight lines, curved lines, etc.)", location: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", description: "Line control, basic drawing", type: "Binder"},
+            {item: "Exercise worksheets on drawing 3-dimensional forms from 2D objects", location: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", description: "3D visualization, form drawing", type: "Binder"},
+            {item: "Mark making worksheets", location: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", description: "Mark making, texture techniques", type: "Binder"},
+            {item: "Texture drawing worksheets", location: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", description: "Texture rendering, surface techniques", type: "Binder"},
+            {item: "Oil pastels exemplar", location: "More Drawing Lesson Plan Resources", category: "Mixed Media & 3D", description: "Oil pastels, color blending", type: "Binder"},
+            {item: "Value scale worksheets (English and Spanish)", location: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", description: "Value scales, bilingual instruction", type: "Binder"},
+            {item: "Art critique worksheet for value scale projects", location: "More Drawing Lesson Plan Resources", category: "Assessment Materials", description: "Art critique, value assessment", type: "Binder"},
+            {item: "Examples of utilizing different lines to make 2D images look 3-dimensional", location: "More Drawing Lesson Plan Resources", category: "Drawing & Sketching", description: "Line techniques, 3D illusion", type: "Binder"},
 
-            // Single Day Activities
-            {material: "Art escape room printouts", binder: "Single Day Activities", category: "Engagement & Games", skills: "Problem solving, art games"},
-            {material: "Zen Tangles information", binder: "Single Day Activities", category: "Drawing & Sketching", skills: "Zentangles, meditative drawing"},
-            {material: "Worksheets on how to create a crumpled paper abstract", binder: "Single Day Activities", category: "Drawing & Sketching", skills: "Abstract drawing, observation"},
-            {material: "Mystery grid printouts", binder: "Single Day Activities", category: "Drawing & Sketching", skills: "Grid drawing, mystery images"},
+            // Single Day Activities Binder
+            {item: "Art escape room printouts", location: "Single Day Activities", category: "Engagement & Games", description: "Problem solving, art games", type: "Binder"},
+            {item: "Zen Tangles information", location: "Single Day Activities", category: "Drawing & Sketching", description: "Zentangles, meditative drawing", type: "Binder"},
+            {item: "Worksheets on how to create a crumpled paper abstract", location: "Single Day Activities", category: "Drawing & Sketching", description: "Abstract drawing, observation", type: "Binder"},
+            {item: "Mystery grid printouts", location: "Single Day Activities", category: "Drawing & Sketching", description: "Grid drawing, mystery images", type: "Binder"},
 
-            // Planning and Brainstorming (Student Facing)
-            {material: "Principles of art and elements of art sketchbook inserts", binder: "Planning and Brainstorming", category: "Design Elements & Principles", skills: "Art principles, elements reference"},
-            {material: "List of art vocabulary", binder: "Planning and Brainstorming", category: "Vocabulary & Reference", skills: "Art terminology, vocabulary building"},
-            {material: "Creative mind mapping", binder: "Planning and Brainstorming", category: "General Planning & Exploration", skills: "Idea generation, creative planning"},
-            {material: "Emotional mood board planning sheets", binder: "Planning and Brainstorming", category: "General Planning & Exploration", skills: "Mood boards, emotional expression"},
-            {material: "Personal logo worksheet", binder: "Planning and Brainstorming", category: "Drawing & Sketching", skills: "Logo design, personal branding"},
-            {material: "Planning artwork with intention worksheets", binder: "Planning and Brainstorming", category: "General Planning & Exploration", skills: "Intentional art making, planning"},
-            {material: "Universe and material testing grid", binder: "Planning and Brainstorming", category: "General Planning & Exploration", skills: "Material exploration, testing"},
-            {material: "Self identification individual versus secondary and external dimensions identity worksheet", binder: "Planning and Brainstorming", category: "Identity & Self-Expression", skills: "Identity exploration, self-reflection"},
+            // Planning and Brainstorming (Student Facing) Binder
+            {item: "Principles of art and elements of art sketchbook inserts", location: "Planning and Brainstorming", category: "Design Elements & Principles", description: "Art principles, elements reference", type: "Binder"},
+            {item: "List of art vocabulary", location: "Planning and Brainstorming", category: "Vocabulary & Reference", description: "Art terminology, vocabulary building", type: "Binder"},
+            {item: "Creative mind mapping", location: "Planning and Brainstorming", category: "General Planning & Exploration", description: "Idea generation, creative planning", type: "Binder"},
+            {item: "Emotional mood board planning sheets", location: "Planning and Brainstorming", category: "General Planning & Exploration", description: "Mood boards, emotional expression", type: "Binder"},
+            {item: "Personal logo worksheet", location: "Planning and Brainstorming", category: "Drawing & Sketching", description: "Logo design, personal branding", type: "Binder"},
+            {item: "Planning artwork with intention worksheets", location: "Planning and Brainstorming", category: "General Planning & Exploration", description: "Intentional art making, planning", type: "Binder"},
+            {item: "Universe and material testing grid", location: "Planning and Brainstorming", category: "General Planning & Exploration", description: "Material exploration, testing", type: "Binder"},
+            {item: "Self identification individual versus secondary and external dimensions identity worksheet", location: "Planning and Brainstorming", category: "Identity & Self-Expression", description: "Identity exploration, self-reflection", type: "Binder"},
 
-            // Warm Ups
-            {material: "Stylization warm ups", binder: "Warm Ups", category: "Drawing & Sketching", skills: "Stylization techniques"},
-            {material: "Contrast warm ups", binder: "Warm Ups", category: "Design Elements & Principles", skills: "Contrast, visual elements"},
-            {material: "Drawing the face via stylization warm ups", binder: "Warm Ups", category: "Drawing & Sketching", skills: "Face drawing, stylization"},
-            {material: "Dexterity warm ups", binder: "Warm Ups", category: "Skill Building & Warm Ups", skills: "Hand dexterity, motor skills"},
-            {material: "Blank 'list as many things as you can notice in 30 seconds' artwork sheets", binder: "Warm Ups", category: "Observation & Analysis", skills: "Observation skills, visual analysis"},
-            {material: "Image walk/jog/run focused on shapes versus form", binder: "Warm Ups", category: "Observation & Analysis", skills: "Shape recognition, form analysis"},
-            {material: "Draw a character made up of 3 animals warm ups", binder: "Warm Ups", category: "Drawing & Sketching", skills: "Character design, creative combination"},
-            {material: "Series of drawing warm ups", binder: "Warm Ups", category: "Drawing & Sketching", skills: "Drawing fundamentals, warm-up exercises"},
-            {material: "Blank walk/jog/run sheets", binder: "Warm Ups", category: "Observation & Analysis", skills: "Progressive observation, visual skills"},
+            // Warm Ups Binder
+            {item: "Stylization warm ups", location: "Warm Ups", category: "Drawing & Sketching", description: "Stylization techniques", type: "Binder"},
+            {item: "Contrast warm ups", location: "Warm Ups", category: "Design Elements & Principles", description: "Contrast, visual elements", type: "Binder"},
+            {item: "Drawing the face via stylization warm ups", location: "Warm Ups", category: "Drawing & Sketching", description: "Face drawing, stylization", type: "Binder"},
+            {item: "Dexterity warm ups", location: "Warm Ups", category: "Skill Building & Warm Ups", description: "Hand dexterity, motor skills", type: "Binder"},
+            {item: "Blank 'list as many things as you can notice in 30 seconds' artwork sheets", location: "Warm Ups", category: "Observation & Analysis", description: "Observation skills, visual analysis", type: "Binder"},
+            {item: "Image walk/jog/run focused on shapes versus form", location: "Warm Ups", category: "Observation & Analysis", description: "Shape recognition, form analysis", type: "Binder"},
+            {item: "Draw a character made up of 3 animals warm ups", location: "Warm Ups", category: "Drawing & Sketching", description: "Character design, creative combination", type: "Binder"},
+            {item: "Series of drawing warm ups", location: "Warm Ups", category: "Drawing & Sketching", description: "Drawing fundamentals, warm-up exercises", type: "Binder"},
+            {item: "Blank walk/jog/run sheets", location: "Warm Ups", category: "Observation & Analysis", description: "Progressive observation, visual skills", type: "Binder"},
 
-            // Photography
-            {material: "Assignment on researching a photographer", binder: "Photography", category: "Photography", skills: "Photography research, artist study"},
-            {material: "Mundane into Magic truncated unit with all paperwork", binder: "Photography", category: "Photography", skills: "Photography composition, perspective"},
+            // Photography Binder
+            {item: "Assignment on researching a photographer", location: "Photography", category: "Photography", description: "Photography research, artist study", type: "Binder"},
+            {item: "Mundane into Magic truncated unit with all paperwork", location: "Photography", category: "Photography", description: "Photography composition, perspective", type: "Binder"},
 
-            // Workshop/Tea Front
-            {material: "Progress pair with the worksheet", binder: "Workshop/Tea Front", category: "Assessment Materials", skills: "Progress tracking, peer work"},
+            // Workshop/Tea Front Binder
+            {item: "Progress pair with the worksheet", location: "Workshop/Tea Front", category: "Assessment Materials", description: "Progress tracking, peer work", type: "Binder"},
 
-            // Painting
-            {material: "Acrylic painting tint and tone/shade skill builder sheets", binder: "Painting", category: "Color Theory", skills: "Acrylic painting, color mixing, tints, tones, shades"},
+            // Painting Binder
+            {item: "Acrylic painting tint and tone/shade skill builder sheets", location: "Painting", category: "Color Theory", description: "Acrylic painting, color mixing, tints, tones, shades", type: "Binder"},
 
-            // Digital Art and New Media
-            {material: "Understanding camera aperture worksheets", binder: "Digital Art and New Media", category: "Digital Art & New Media", skills: "Camera techniques, aperture"},
-            {material: "Project brief for moving pictures", binder: "Digital Art and New Media", category: "Digital Art & New Media", skills: "Animation, moving images"},
-            {material: "Rotoscoping project", binder: "Digital Art and New Media", category: "Digital Art & New Media", skills: "Rotoscoping, animation techniques"},
-            {material: "Character portrait project", binder: "Digital Art and New Media", category: "Digital Art & New Media", skills: "Digital portraits, character design"},
+            // Digital Art and New Media Binder
+            {item: "Understanding camera aperture worksheets", location: "Digital Art and New Media", category: "Digital Art & New Media", description: "Camera techniques, aperture", type: "Binder"},
+            {item: "Project brief for moving pictures", location: "Digital Art and New Media", category: "Digital Art & New Media", description: "Animation, moving images", type: "Binder"},
+            {item: "Rotoscoping project", location: "Digital Art and New Media", category: "Digital Art & New Media", description: "Rotoscoping, animation techniques", type: "Binder"},
+            {item: "Character portrait project", location: "Digital Art and New Media", category: "Digital Art & New Media", description: "Digital portraits, character design", type: "Binder"},
 
-            // Foundations
-            {material: "Various self portrait style cards (laminated)", binder: "Foundations", category: "Drawing & Sketching", skills: "Self-portraits, style exploration"},
-            {material: "My Ideal Art Class Experience printouts", binder: "Foundations", category: "General Planning & Exploration", skills: "Classroom reflection, student voice"},
-            {material: "Trading card paperwork project", binder: "Foundations", category: "Engagement & Games", skills: "Trading cards, game design"},
-            {material: "Exercise and information on negative and positive space", binder: "Foundations", category: "Design Elements & Principles", skills: "Negative space, positive space"},
-            {material: "Folklore artist's research assignment", binder: "Foundations", category: "Reflection & Critical Thinking", skills: "Artist research, folklore study"},
-            {material: "Choosing your best folklore story paperwork", binder: "Foundations", category: "Reflection & Critical Thinking", skills: "Story selection, folklore analysis"},
-            {material: "Interview script about folklore", binder: "Foundations", category: "Reflection & Critical Thinking", skills: "Interview techniques, folklore research"},
-            {material: "Practice sheets for lino cutting on erasers", binder: "Foundations", category: "Printmaking", skills: "Lino cutting, printmaking basics"},
-            {material: "Info sheets on how to draw the mouth, the nose, and the eyes", binder: "Foundations", category: "Drawing & Sketching", skills: "Facial features, portrait drawing"},
-            {material: "Album cover unit paperwork", binder: "Foundations", category: "Digital Art & New Media", skills: "Album design, graphic design"},
+            // Foundations Binder
+            {item: "Various self portrait style cards (laminated)", location: "Foundations", category: "Drawing & Sketching", description: "Self-portraits, style exploration", type: "Binder"},
+            {item: "My Ideal Art Class Experience printouts", location: "Foundations", category: "General Planning & Exploration", description: "Classroom reflection, student voice", type: "Binder"},
+            {item: "Trading card paperwork project", location: "Foundations", category: "Engagement & Games", description: "Trading cards, game design", type: "Binder"},
+            {item: "Exercise and information on negative and positive space", location: "Foundations", category: "Design Elements & Principles", description: "Negative space, positive space", type: "Binder"},
+            {item: "Folklore artist's research assignment", location: "Foundations", category: "Reflection & Critical Thinking", description: "Artist research, folklore study", type: "Binder"},
+            {item: "Choosing your best folklore story paperwork", location: "Foundations", category: "Reflection & Critical Thinking", description: "Story selection, folklore analysis", type: "Binder"},
+            {item: "Interview script about folklore", location: "Foundations", category: "Reflection & Critical Thinking", description: "Interview techniques, folklore research", type: "Binder"},
+            {item: "Practice sheets for lino cutting on erasers", location: "Foundations", category: "Printmaking", description: "Lino cutting, printmaking basics", type: "Binder"},
+            {item: "Info sheets on how to draw the mouth, the nose, and the eyes", location: "Foundations", category: "Drawing & Sketching", description: "Facial features, portrait drawing", type: "Binder"},
+            {item: "Album cover unit paperwork", location: "Foundations", category: "Digital Art & New Media", description: "Album design, graphic design", type: "Binder"},
 
-            // Drawing Lesson Resources
-            {material: "Examples of pattern worksheets", binder: "Drawing Lesson Resources", category: "Design Elements & Principles", skills: "Pattern creation, repetition"},
-            {material: "Laminated pattern worksheets", binder: "Drawing Lesson Resources", category: "Design Elements & Principles", skills: "Pattern practice, reusable materials"},
-            {material: "Pen and ink value and texture practice sheets", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Pen and ink, value, texture"},
-            {material: "Pen and ink value practice sheets", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Pen and ink techniques, value"},
-            {material: "Line value techniques scales", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Line techniques, value scales"},
-            {material: "Shading practice for hatching, crosshatching, stippling, and scumbling", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Shading techniques, hatching, crosshatching, stippling, scumbling"},
-            {material: "Mark making techniques and practice", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Mark making, texture techniques"},
-            {material: "Colored pencil skill builders material exploration sheets", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Colored pencil techniques, material exploration"},
-            {material: "Colored pencil skill builder extensions", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Advanced colored pencil, skill extension"},
-            {material: "More mark making practice", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Advanced mark making, texture"},
-            {material: "Large value sheet", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Value practice, large format"},
-            {material: "Radial symmetry packets", binder: "Drawing Lesson Resources", category: "Design Elements & Principles", skills: "Radial symmetry, geometric design"},
-            {material: "Depicting the Person unit from May 2024", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Figure drawing, portrait techniques"},
-            {material: "Cross contour worksheets", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Cross contour, form drawing"},
-            {material: "Examples of weather for value drawing", binder: "Drawing Lesson Resources", category: "Drawing & Sketching", skills: "Weather drawing, atmospheric effects, value"},
+            // Drawing Lesson Resources Binder
+            {item: "Examples of pattern worksheets", location: "Drawing Lesson Resources", category: "Design Elements & Principles", description: "Pattern creation, repetition", type: "Binder"},
+            {item: "Laminated pattern worksheets", location: "Drawing Lesson Resources", category: "Design Elements & Principles", description: "Pattern practice, reusable materials", type: "Binder"},
+            {item: "Pen and ink value and texture practice sheets", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Pen and ink, value, texture", type: "Binder"},
+            {item: "Pen and ink value practice sheets", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Pen and ink techniques, value", type: "Binder"},
+            {item: "Line value techniques scales", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Line techniques, value scales", type: "Binder"},
+            {item: "Shading practice for hatching, crosshatching, stippling, and scumbling", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Shading techniques, hatching, crosshatching, stippling, scumbling", type: "Binder"},
+            {item: "Mark making techniques and practice", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Mark making, texture techniques", type: "Binder"},
+            {item: "Colored pencil skill builders material exploration sheets", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Colored pencil techniques, material exploration", type: "Binder"},
+            {item: "Colored pencil skill builder extensions", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Advanced colored pencil, skill extension", type: "Binder"},
+            {item: "More mark making practice", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Advanced mark making, texture", type: "Binder"},
+            {item: "Large value sheet", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Value practice, large format", type: "Binder"},
+            {item: "Radial symmetry packets", location: "Drawing Lesson Resources", category: "Design Elements & Principles", description: "Radial symmetry, geometric design", type: "Binder"},
+            {item: "Depicting the Person unit from May 2024", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Figure drawing, portrait techniques", type: "Binder"},
+            {item: "Cross contour worksheets", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Cross contour, form drawing", type: "Binder"},
+            {item: "Examples of weather for value drawing", location: "Drawing Lesson Resources", category: "Drawing & Sketching", description: "Weather drawing, atmospheric effects, value", type: "Binder"},
 
-            // Autonomous Learners Project
-            {material: "Independent project study check-ins", binder: "Autonomous Learners Project", category: "Assessment Materials", skills: "Independent study, progress monitoring"},
-            {material: "WIC editor animation extension activities", binder: "Autonomous Learners Project", category: "Digital Art & New Media", skills: "Animation, digital editing"},
-            {material: "Material exploration extension activities", binder: "Autonomous Learners Project", category: "General Planning & Exploration", skills: "Advanced material exploration, independent research"},
-            {material: "Blender extension activities", binder: "Autonomous Learners Project", category: "Digital Art & New Media", skills: "3D modeling, Blender software"},
-            {material: "Personality quizzes for independent study", binder: "Autonomous Learners Project", category: "Assessment Materials", skills: "Learning style assessment, independent study planning"}
+            // Autonomous Learners Project Binder
+            {item: "Independent project study check-ins", location: "Autonomous Learners Project", category: "Assessment Materials", description: "Independent study, progress monitoring", type: "Binder"},
+            {item: "WIC editor animation extension activities", location: "Autonomous Learners Project", category: "Digital Art & New Media", description: "Animation, digital editing", type: "Binder"},
+            {item: "Material exploration extension activities", location: "Autonomous Learners Project", category: "General Planning & Exploration", description: "Advanced material exploration, independent research", type: "Binder"},
+            {item: "Blender extension activities", location: "Autonomous Learners Project", category: "Digital Art & New Media", description: "3D modeling, Blender software", type: "Binder"},
+            {item: "Personality quizzes for independent study", location: "Autonomous Learners Project", category: "Assessment Materials", description: "Learning style assessment, independent study planning", type: "Binder"},
+
+            // PHYSICAL SUPPLIES (STORAGE LOCATIONS)
+            // Tan Cabinet
+            {item: "Acrylic paint", location: "Tan cabinet", category: "Paint", description: "Various acrylic paints", type: "Supply"},
+            {item: "House paint", location: "Tan cabinet", category: "Paint", description: "Various house paints", type: "Supply"},
+            {item: "Tempera paint", location: "Tan cabinet", category: "Paint", description: "Assorted tempera paints", type: "Supply"},
+            {item: "Alcohol brush markers", location: "Tan cabinet", category: "Markers", description: "Alcohol brush markers", type: "Supply"},
+            {item: "Alcohol markers blue", location: "Tan cabinet", category: "Markers", description: "Blue alcohol markers", type: "Supply"},
+            {item: "Alcohol markers flesh tones", location: "Tan cabinet", category: "Markers", description: "Flesh tone alcohol markers", type: "Supply"},
+            {item: "Alcohol markers green", location: "Tan cabinet", category: "Markers", description: "Green alcohol markers", type: "Supply"},
+            {item: "Alcohol markers orange and yellow", location: "Tan cabinet", category: "Markers", description: "Orange and yellow alcohol markers", type: "Supply"},
+            {item: "Alcohol markers pink and purple", location: "Tan cabinet", category: "Markers", description: "Pink and purple alcohol markers", type: "Supply"},
+            {item: "Alcohol markers red", location: "Tan cabinet", category: "Markers", description: "Red alcohol markers", type: "Supply"},
+            {item: "Binder rings", location: "Tan cabinet", category: "Craft Materials", description: "Binder rings", type: "Supply"},
+            {item: "Blank small sketchbooks", location: "Tan cabinet", category: "Paper", description: "Blank small sketchbooks", type: "Supply"},
+            {item: "Brush microns", location: "Tan cabinet", category: "Markers", description: "Brush tip micron pens", type: "Supply"},
+            {item: "Charcoal pencil kits", location: "Tan cabinet", category: "Drawing Tools", description: "Charcoal pencil kits", type: "Supply"},
+            {item: "Craypaws", location: "Tan cabinet", category: "Drawing Tools", description: "Craypaws drawing tools", type: "Supply"},
+            {item: "Dot stickers", location: "Tan cabinet", category: "Adhesives", description: "Dot stickers", type: "Supply"},
+            {item: "Drawing pencils", location: "Tan cabinet", category: "Drawing Tools", description: "Various drawing pencils", type: "Supply"},
+            {item: "Embossing sticks", location: "Tan cabinet", category: "Tools", description: "Embossing sticks", type: "Supply"},
+            {item: "Embroidery floss", location: "Tan cabinet", category: "Craft Materials", description: "Embroidery floss", type: "Supply"},
+            {item: "Embroidery needles", location: "Tan cabinet", category: "Craft Materials", description: "Embroidery needles", type: "Supply"},
+            {item: "Erasers", location: "Tan cabinet", category: "Tools", description: "Various erasers", type: "Supply"},
+            {item: "Extra glue lids", location: "Tan cabinet", category: "Adhesives", description: "Extra glue lids", type: "Supply"},
+            {item: "Gems and beads", location: "Tan cabinet", category: "Craft Materials", description: "Gems and beads", type: "Supply"},
+            {item: "Glue dots", location: "Tan cabinet", category: "Adhesives", description: "Glue dots", type: "Supply"},
+            {item: "Glue sticks", location: "Tan cabinet", category: "Adhesives", description: "Glue sticks", type: "Supply"},
+            {item: "Highlighters", location: "Tan cabinet", category: "Markers", description: "Highlighter pens", type: "Supply"},
+            {item: "Liner microns", location: "Tan cabinet", category: "Markers", description: "Liner micron pens", type: "Supply"},
+            {item: "Liner Sharpies", location: "Tan cabinet", category: "Markers", description: "Liner Sharpie pens", type: "Supply"},
+            {item: "Magnets", location: "Tan cabinet", category: "Tools", description: "Magnets", type: "Supply"},
+            {item: "Mosaic squares", location: "Tan cabinet", category: "Craft Materials", description: "Mosaic squares", type: "Supply"},
+            {item: "Note cards", location: "Tan cabinet", category: "Paper", description: "Note cards", type: "Supply"},
+            {item: "Pencil sharpeners", location: "Tan cabinet", category: "Tools", description: "Pencil sharpeners", type: "Supply"},
+            {item: "Permanent markers", location: "Tan cabinet", category: "Markers", description: "Permanent markers", type: "Supply"},
+            {item: "Photo slides", location: "Tan cabinet", category: "Paper", description: "Photo slides", type: "Supply"},
+            {item: "Pictionary cards", location: "Tan cabinet", category: "Games", description: "Pictionary cards", type: "Supply"},
+            {item: "Plastacina", location: "Tan cabinet", category: "Craft Materials", description: "Plastacina modeling clay", type: "Supply"},
+            {item: "Polymer clay", location: "Tan cabinet", category: "Craft Materials", description: "Polymer clay", type: "Supply"},
+            {item: "Pre folded 8 page zines", location: "Tan cabinet", category: "Paper", description: "Pre-folded 8 page zines", type: "Supply"},
+            {item: "Prismacolor colored pencils scholar edition", location: "Tan cabinet", category: "Drawing Tools", description: "Prismacolor colored pencils, Scholar edition", type: "Supply"},
+            {item: "Rubber bands", location: "Tan cabinet", category: "Tools", description: "Rubber bands", type: "Supply"},
+            {item: "Short wooden dowels", location: "Tan cabinet", category: "Tools", description: "Short wooden dowels", type: "Supply"},
+            {item: "Sticker book", location: "Tan cabinet", category: "Reference", description: "Sticker book", type: "Supply"},
+            {item: "Tacky glue", location: "Tan cabinet", category: "Adhesives", description: "Tacky glue", type: "Supply"},
+            {item: "Velcro dots", location: "Tan cabinet", category: "Adhesives", description: "Velcro dots", type: "Supply"},
+            {item: "Water soluble oil pastels", location: "Tan cabinet", category: "Drawing Tools", description: "Water soluble oil pastels", type: "Supply"},
+            {item: "Watercolor pencils", location: "Tan cabinet", category: "Drawing Tools", description: "Watercolor pencils", type: "Supply"},
+            {item: "Yearbook archives", location: "Tan cabinet", category: "Reference", description: "Yearbook archives", type: "Supply"},
+            {item: "Zip ties", location: "Tan cabinet", category: "Tools", description: "Zip ties", type: "Supply"},
+
+            // Above the Closets
+            {item: "Assemblage materials", location: "Above the closets", category: "Craft Materials", description: "Assemblage materials", type: "Supply"},
+            {item: "Clothing", location: "Above the closets", category: "Costumes & Fabric", description: "Clothing", type: "Supply"},
+            {item: "Costume bin", location: "Above the closets", category: "Costumes & Fabric", description: "Bin of costumes", type: "Supply"},
+            {item: "Dance materials", location: "Above the closets", category: "Movement & Performance", description: "Dance materials", type: "Supply"},
+            {item: "DSLR camera accessories", location: "Above the closets", category: "Technology", description: "DSLR camera accessories", type: "Supply"},
+            {item: "Extra large chopsticks", location: "Above the closets", category: "Tools", description: "Extra large chopsticks", type: "Supply"},
+            {item: "Fabric", location: "Above the closets", category: "Costumes & Fabric", description: "Fabric", type: "Supply"},
+            {item: "Foil", location: "Above the closets", category: "Craft Materials", description: "Foil", type: "Supply"},
+            {item: "Hairdryers", location: "Above the closets", category: "Tools", description: "Hairdryers", type: "Supply"},
+            {item: "Linoleum exemplars", location: "Above the closets", category: "Printmaking", description: "Linoleum exemplars", type: "Supply"},
+            {item: "Paintbrushes", location: "Above the closets", category: "Brushes", description: "Paintbrushes", type: "Supply"},
+            {item: "Pencil cases", location: "Above the closets", category: "Storage", description: "Pencil cases", type: "Supply"},
+            {item: "Pulped paper", location: "Above the closets", category: "Paper", description: "Pulped paper", type: "Supply"},
+            {item: "Tape", location: "Above the closets", category: "Adhesives", description: "Tape", type: "Supply"},
+            {item: "Wires", location: "Above the closets", category: "Craft Materials", description: "Wires", type: "Supply"},
+
+            // Bookshelf Cabinet
+            {item: "Clay tools and sponges", location: "Bookshelf cabinet", category: "Tools", description: "Clay tools and sponges", type: "Supply"},
+            {item: "Easels (10 tabletop easels)", location: "Bookshelf cabinet", category: "Tools", description: "10 tabletop easels", type: "Supply"},
+            {item: "Loom", location: "Bookshelf cabinet", category: "Craft Materials", description: "Loom", type: "Supply"},
+            {item: "Paper clay mitts", location: "Bookshelf cabinet", category: "Tools", description: "Paper clay mitts", type: "Supply"},
+            {item: "Polymer clay", location: "Bookshelf cabinet", category: "Craft Materials", description: "Polymer clay", type: "Supply"},
+            {item: "Toothpicks", location: "Bookshelf cabinet", category: "Tools", description: "Toothpicks", type: "Supply"},
+            {item: "Wire", location: "Bookshelf cabinet", category: "Craft Materials", description: "Wire", type: "Supply"},
+
+            // Under Student Reference Library
+            {item: "Acrylic paint in small tubes", location: "Under student reference library", category: "Paint", description: "Acrylic paint in small tubes", type: "Supply"},
+            {item: "Gouache paint in small tubes", location: "Under student reference library", category: "Paint", description: "Gouache paint in small tubes", type: "Supply"},
+            {item: "Hot glue", location: "Under student reference library", category: "Adhesives", description: "Hot glue", type: "Supply"},
+
+            // Closet Shelves
+            {item: "Art show materials", location: "Closet shelves", category: "Display & Exhibition", description: "Art show materials", type: "Supply"},
+            {item: "Empty file folders", location: "Closet shelves", category: "Storage", description: "Empty file folders", type: "Supply"},
+            {item: "Floor cushions", location: "Closet shelves", category: "Furniture", description: "Floor cushions", type: "Supply"},
+            {item: "Large portfolios", location: "Closet shelves", category: "Storage", description: "Large portfolios", type: "Supply"},
+            {item: "Paper cement", location: "Closet shelves", category: "Adhesives", description: "Paper cement", type: "Supply"},
+            {item: "Printing materials", location: "Closet shelves", category: "Printmaking", description: "Printing materials", type: "Supply"},
+            {item: "Recycled materials", location: "Closet shelves", category: "Craft Materials", description: "Recycled materials", type: "Supply"},
+            {item: "Rolls of linoleum", location: "Closet shelves", category: "Printmaking", description: "Rolls of linoleum", type: "Supply"},
+            {item: "Several frames", location: "Closet shelves", category: "Display & Exhibition", description: "Several frames", type: "Supply"},
+            {item: "Shredded paper", location: "Closet shelves", category: "Paper", description: "Shredded paper", type: "Supply"},
+
+            // Small Brown Drawers
+            {item: "Projector", location: "Small brown drawers", category: "Technology", description: "Projector", type: "Supply"},
+            {item: "Spare Mac", location: "Small brown drawers", category: "Technology", description: "Spare Mac", type: "Supply"},
+
+            // Underneath Art Material Drawers
+            {item: "Complete set of Wacom tablets", location: "Underneath art material drawers", category: "Technology", description: "Complete set of Wacom tablets", type: "Supply"},
+
+            // Underneath Whiteboard
+            {item: "Bench hooks for linoleum carving", location: "Underneath whiteboard", category: "Printmaking", description: "Bench hooks for linoleum carving", type: "Supply"},
+
+            // Lockable Cabinet
+            {item: "Class set of iPads", location: "Lockable cabinet", category: "Technology", description: "Class set of iPads", type: "Supply"},
+            {item: "Staple gun", location: "Lockable cabinet", category: "Tools", description: "Staple gun", type: "Supply"},
+            {item: "Staples", location: "Lockable cabinet", category: "Tools", description: "Staples", type: "Supply"}
         ];
 
-        let filteredData = [...materialsData];
+        let filteredData = [...allData];
+        let currentView = 'all';
 
         // Populate filter dropdowns
         function populateFilters() {
-            const binderFilter = document.getElementById('binderFilter');
+            const locationFilter = document.getElementById('locationFilter');
             const categoryFilter = document.getElementById('categoryFilter');
             
-            const binders = [...new Set(materialsData.map(item => item.binder))].sort();
-            const categories = [...new Set(materialsData.map(item => item.category))].sort();
+            const locations = [...new Set(allData.map(item => item.location))].sort();
+            const categories = [...new Set(allData.map(item => item.category))].sort();
             
-            binders.forEach(binder => {
+            locationFilter.innerHTML = '<option value="">All Locations</option>';
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            
+            locations.forEach(location => {
                 const option = document.createElement('option');
-                option.value = binder;
-                option.textContent = binder;
-                binderFilter.appendChild(option);
+                option.value = location;
+                option.textContent = location;
+                locationFilter.appendChild(option);
             });
             
             categories.forEach(category => {
@@ -330,35 +473,46 @@
             
             data.forEach(item => {
                 const row = document.createElement('tr');
+                const locationClass = item.type === 'Binder' ? 'binder-name' : 'location';
                 row.innerHTML = `
-                    <td>${item.material}</td>
-                    <td><span class="binder-name">${item.binder}</span></td>
+                    <td>${item.item}</td>
+                    <td><span class="${locationClass}">${item.location}</span></td>
                     <td><span class="category">${item.category}</span></td>
-                    <td>${item.skills}</td>
+                    <td>${item.description}</td>
+                    <td>${item.type}</td>
                 `;
                 tbody.appendChild(row);
             });
             
-            document.getElementById('resultsCount').textContent = `Showing ${data.length} of ${materialsData.length} materials`;
+            document.getElementById('resultsCount').textContent = `Showing ${data.length} of ${allData.length} items`;
         }
 
         // Filter function
         function filterData() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const binderFilter = document.getElementById('binderFilter').value;
+            const locationFilter = document.getElementById('locationFilter').value;
             const categoryFilter = document.getElementById('categoryFilter').value;
             
-            filteredData = materialsData.filter(item => {
+            let dataToFilter = allData;
+            
+            // Apply view filter
+            if (currentView === 'binders') {
+                dataToFilter = allData.filter(item => item.type === 'Binder');
+            } else if (currentView === 'supplies') {
+                dataToFilter = allData.filter(item => item.type === 'Supply');
+            }
+            
+            filteredData = dataToFilter.filter(item => {
                 const matchesSearch = !searchTerm || 
-                    item.material.toLowerCase().includes(searchTerm) ||
-                    item.binder.toLowerCase().includes(searchTerm) ||
+                    item.item.toLowerCase().includes(searchTerm) ||
+                    item.location.toLowerCase().includes(searchTerm) ||
                     item.category.toLowerCase().includes(searchTerm) ||
-                    item.skills.toLowerCase().includes(searchTerm);
+                    item.description.toLowerCase().includes(searchTerm);
                 
-                const matchesBinder = !binderFilter || item.binder === binderFilter;
+                const matchesLocation = !locationFilter || item.location === locationFilter;
                 const matchesCategory = !categoryFilter || item.category === categoryFilter;
                 
-                return matchesSearch && matchesBinder && matchesCategory;
+                return matchesSearch && matchesLocation && matchesCategory;
             });
             
             renderTable(filteredData);
@@ -366,33 +520,35 @@
 
         // Export functions
         function exportToCSV() {
-            const headers = ['Material/Resource', 'Binder Location', 'Category', 'Skills/Techniques'];
+            const headers = ['Item/Resource', 'Location/Binder', 'Category', 'Description/Skills', 'Type'];
             const csvContent = [
                 headers.join(','),
                 ...filteredData.map(item => [
-                    `"${item.material}"`,
-                    `"${item.binder}"`,
+                    `"${item.item}"`,
+                    `"${item.location}"`,
                     `"${item.category}"`,
-                    `"${item.skills}"`
+                    `"${item.description}"`,
+                    `"${item.type}"`
                 ].join(','))
             ].join('\n');
             
-            downloadFile(csvContent, 'art_materials_database.csv', 'text/csv');
+            downloadFile(csvContent, 'complete_art_room_database.csv', 'text/csv');
         }
 
         function exportToTSV() {
-            const headers = ['Material/Resource', 'Binder Location', 'Category', 'Skills/Techniques'];
+            const headers = ['Item/Resource', 'Location/Binder', 'Category', 'Description/Skills', 'Type'];
             const tsvContent = [
                 headers.join('\t'),
                 ...filteredData.map(item => [
-                    item.material,
-                    item.binder,
+                    item.item,
+                    item.location,
                     item.category,
-                    item.skills
+                    item.description,
+                    item.type
                 ].join('\t'))
             ].join('\n');
             
-            downloadFile(tsvContent, 'art_materials_database.tsv', 'text/tab-separated-values');
+            downloadFile(tsvContent, 'complete_art_room_database.tsv', 'text/tab-separated-values');
         }
 
         function downloadFile(content, filename, mimeType) {
@@ -407,8 +563,30 @@
 
         // Event listeners
         document.getElementById('searchInput').addEventListener('input', filterData);
-        document.getElementById('binderFilter').addEventListener('change', filterData);
+        document.getElementById('locationFilter').addEventListener('change', filterData);
         document.getElementById('categoryFilter').addEventListener('change', filterData);
+
+        // View toggle functionality
+        document.getElementById('showAll').addEventListener('click', function() {
+            currentView = 'all';
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            filterData();
+        });
+
+        document.getElementById('showBinders').addEventListener('click', function() {
+            currentView = 'binders';
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            filterData();
+        });
+
+        document.getElementById('showSupplies').addEventListener('click', function() {
+            currentView = 'supplies';
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            filterData();
+        });
 
         // Filter button functionality
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -424,7 +602,7 @@
                 } else {
                     // Clear filters
                     document.getElementById('searchInput').value = '';
-                    document.getElementById('binderFilter').value = '';
+                    document.getElementById('locationFilter').value = '';
                     document.getElementById('categoryFilter').value = '';
                 }
                 
@@ -434,7 +612,7 @@
 
         // Initialize
         populateFilters();
-        renderTable(materialsData);
+        renderTable(allData);
     </script>
 </body>
 </html>
